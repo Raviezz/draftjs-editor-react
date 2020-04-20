@@ -37,20 +37,3 @@
   }
 }
 
-h1, p {
-  font-family: Lato;
-}
-
-.RichEditor-controls span{
-  padding: 2px; 
-  margin: 0.4em !important;
-}
-
-.RichEditor-controls{
-  display: inline;
-}
-
-.side-padding-20{
-  padding: 20px;
-
-}

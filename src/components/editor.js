@@ -2,24 +2,26 @@ import React, { Component } from 'react';
 import 'draft-js/dist/Draft.css';
 import debounce from 'lodash/debounce';
 import Grid from '@material-ui/core/Grid';
-
+import ToggleButton from '@material-ui/lab/ToggleButton';
+import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import Box from '@material-ui/core/Box';
 import {
   Editor, 
   EditorState,
   RichUtils,
-  convertFromRaw, 
   convertToRaw
 } from 'draft-js';
+import { green } from '@material-ui/core/colors';
 import './editor.css';
 
 const MAX_LENGTH = 10;
 
- class RichEditorExample extends React.Component {
+ class DraftJsEditor extends React.Component {
         constructor(props) {
           super(props);
           this.state = {
-            editorState: EditorState.createEmpty()
+            editorState: EditorState.createEmpty(),
+            alignment: 'left'
           };
 
           this.onChange = this.onChange.bind(this);
@@ -57,7 +59,7 @@ window.localStorage.setItem('content',JSON.stringify((convertToRaw(content))));
         console.log('say');
   	const currentSelection = this.state.editorState.getSelection();
     const isCollapsed = currentSelection.isCollapsed();
-    
+   
     let length = 0;
     
     if (!isCollapsed) {
@@ -79,8 +81,6 @@ window.localStorage.setItem('content',JSON.stringify((convertToRaw(content))));
       	length += currentSelection.getEndOffset() - currentSelection.getStartOffset();
       } else {
       	let currentKey = startKey;
-      	let counter = 0;
-
         while (currentKey && currentKey !== keyAfterEnd) {
  					if (currentKey === startKey) {
           	length += startSelectedTextLength + 1;
@@ -99,7 +99,6 @@ window.localStorage.setItem('content',JSON.stringify((convertToRaw(content))));
   }
 
   _handleBeforeInput = () => {
-    console.log('hello');
   	const currentContent = this.state.editorState.getCurrentContent();
     const currentContentLength = currentContent.getPlainText('').length
 
@@ -157,9 +156,6 @@ window.localStorage.setItem('content',JSON.stringify((convertToRaw(content))));
 
         render() {
           const {editorState} = this.state;
-
-          // If the user changes block type before entering any text, we can
-          // either style the placeholder or hide it. Let's just hide it now.
           let className = 'RichEditor-editor';
           var contentState = editorState.getCurrentContent();
           if (!contentState.hasText()) {
@@ -175,56 +171,79 @@ if (!this.state.editorState) {
       );
     }
     return (
-      <div>
- <div className="RichEditor-root">
+      <div style={styles.root}>
+ 
             <Grid>
                 <Box
                 display = "flex"
                 justifyContent = "space-even"
                 >
-               
-              <BlockStyleControls
+        <ToggleButtonGroup size="small"  exclusive >              
+        <BlockStyleControls
                 editorState={editorState}
                 onToggle={this.toggleBlockType}
               />
              
               
-              <InlineStyleControls
+               <InlineStyleControls
                 editorState={editorState}
                 onToggle={this.toggleInlineStyle}
-              />
-             
+              /> 
+             </ToggleButtonGroup>
               </Box>
-              <div className={className} onClick={this.focus}>
+              <div style={styles.editor} onClick={this.focus}>
                 <Editor
                   blockStyleFn={getBlockStyle}
-                  //customStyleMap={styleMap}
                   editorState={editorState}
                   handleKeyCommand={this.handleKeyCommand}
                   onChange={this.onChange}
                   onTab={this.onTab}
-                  placeholder="Tell a story..."
+                  placeholder="Start here.."
                   ref="editor"
                   spellCheck={true}
                 />
               </div>
               </Grid>
-            </div>
+            
       </div>
     );
 
         }
       }
 
-
-
- // Custom overrides for "code" style.
-      const styleMap = {
-        CODE: {
-          backgroundColor: 'rgba(0, 0, 0, 0.05)',
-          fontFamily: '"Inconsolata", "Menlo", "Consolas", monospace',
-          fontSize: 12,
-          padding: 1,
+      const styles = {
+        root: {
+          fontFamily: '\'Georgia\', serif',
+          fontSize: 14,
+          padding: 20,
+          width: 600,
+        },
+        editor: {
+          borderTop: '1px solid #ddd',
+          cursor: 'text',
+          fontSize: 16,
+          marginTop: 20,
+          minHeight: 400,
+          paddingTop: 20,
+        },
+        controls: {
+          fontFamily: '\'Helvetica\', sans-serif',
+          fontSize: 14,
+          marginBottom: 10,
+          userSelect: 'none',
+        },
+        styleButton: {
+          color: '#999',
+          cursor: 'pointer',
+          marginRight: 16,
+          padding: '2px 0',
+        },
+        styleButtonActive: {
+          color: '#999',
+          backgroundColor: green,
+          cursor: 'pointer',
+          marginRight: 16,
+          padding: '2px 0',
         },
       };
 
@@ -249,18 +268,16 @@ class StyleButton extends React.Component {
         render() {
           let className = 'RichEditor-styleButton ui button';
           if (this.props.active) {
-            className += ' RichEditor-activeButton';
+            className += 'RichEditor-activeButton';
           }
 
           return (
-            <span className={className} onMouseDown={this.onToggle}>
+            <ToggleButton key={this.props.label} className={className} onMouseDown={this.onToggle}>
               {this.props.label}
-            </span>
+            </ToggleButton>
           );
         }
       }
-
-
 
  const BLOCK_TYPES = [
         {label: 'H1', style: 'header-one'},
@@ -272,7 +289,7 @@ class StyleButton extends React.Component {
         {label: 'Blockquote', style: 'blockquote'},
         {label: 'UL', style: 'unordered-list-item'},
         {label: 'OL', style: 'ordered-list-item'},
-        {label: 'Code Block', style: 'code-block'},
+        {label: 'CodeBlock', style: 'code-block'},
       ];
 
 
@@ -286,7 +303,7 @@ class StyleButton extends React.Component {
           .getType();
 
         return (
-          <div className="RichEditor-controls">
+          <div className="controls">
             {BLOCK_TYPES.map((type) =>
               <StyleButton
                 key={type.label}
@@ -313,7 +330,7 @@ class StyleButton extends React.Component {
 const InlineStyleControls = (props) => {
         var currentStyle = props.editorState.getCurrentInlineStyle();
         return (
-          <div className="RichEditor-controls">
+          <div className="controls">
             {INLINE_STYLES.map(type =>
               <StyleButton
                 key={type.label}
@@ -329,4 +346,4 @@ const InlineStyleControls = (props) => {
 
 
 
-      export default RichEditorExample;
+      export default DraftJsEditor;

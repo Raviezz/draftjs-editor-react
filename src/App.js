@@ -1,14 +1,13 @@
 import React from 'react';
 import './App.css';
-import RichEditorExample from './components/editor';
-import GetData from './components/getData';
+import DraftJsEditor from './components/editor';
 import 'draft-js/dist/Draft.css';
 
 export default class App extends React.Component {
   constructor() {
     super();
     this.state = {
-      name: 'React'
+
     };
   }
 
@@ -16,7 +15,7 @@ export default class App extends React.Component {
     return (
       <div>
         <div className="side-padding-20">
-          <RichEditorExample
+          <DraftJsEditor
           editorState={this.state.editorState}
           onChange={this.onChange}
           handleBeforeInput={this._handleBeforeInput}
